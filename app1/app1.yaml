@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app1
+  labels:
+    name: app1
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app1configmap
+  namespace: app1
+data:
+  customscript.sh: |
+    #!/bin/bash
+    echo "Crash this pod?" $CRASH_POD
+    while [ $CRASH_POD != "true" ]; do echo $(date -u) healthy; sleep 30; done
+    echo $(date -u) crashing
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1
+  namespace: app1
+  labels:
+    app: app1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1
+  template:
+    metadata:
+      labels:
+        app: app1
+    spec:
+      containers:
+      - name: nginx
+        image: ubuntu:latest
+        command:
+          - /etc/k8s/customscript.sh
+        env:
+        - name: CRASH_POD
+          value: "false"
+        volumeMounts:
+          - name: config
+            mountPath: /etc/k8s
+      volumes:
+        - name: config
+          configMap:
+            defaultMode: 0700
+            name: app1configmap

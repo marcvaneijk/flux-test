@@ -41,7 +41,7 @@ spec:
           - /etc/k8s/customscript.sh
         env:
         - name: CRASH_POD
-          value: "false"
+          value: "true"
         volumeMounts:
           - name: config
             mountPath: /etc/k8s
